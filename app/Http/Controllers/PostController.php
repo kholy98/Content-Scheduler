@@ -94,4 +94,67 @@ class PostController extends Controller
         return response()->json($posts);
     }
 
+    public function update(Request $request, $id)
+    {
+        $post = Post::find($id);
+    
+        if (!$post) {
+            return response()->json(['error' => 'Post not found.'], 404);
+        }
+    
+        if ($post->user_id !== Auth::id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+    
+        if ($post->status !== 'scheduled') {
+            return response()->json(['error' => 'Only scheduled posts can be updated.'], 400);
+        }
+
+        $request->validate([
+            'title' => 'sometimes|string|max:255',
+            'content' => 'sometimes|string',
+            'image_url' => 'nullable|url',
+            'scheduled_time' => 'nullable|date|after:now',
+            'platforms' => 'nullable|array',
+            'platforms.*' => ['required', Rule::in(['twitter', 'instagram', 'linkedin'])],
+        ]);
+
+        
+        if (in_array('twitter', $request->platforms ?? []) && strlen($request->content ?? $post->content) > 280) {
+            return response()->json(['error' => 'Content exceeds Twitter 280 character limit.'], 422);
+        }
+
+        
+        $post->update($request->only('title', 'content', 'image_url', 'scheduled_time'));
+
+        // Sync platforms if provided
+        if ($request->has('platforms')) {
+            $platformIds = Platform::whereIn('type', $request->platforms)->pluck('id');
+            $post->platforms()->syncWithPivotValues($platformIds, [
+                'platform_status' => 'pending'
+            ]);
+        }
+
+        return response()->json(['message' => 'Post updated successfully', 'post' => $post->load('platforms')]);
+    }
+
+    public function destroy($id)
+    {
+        $post = Post::find($id);
+    
+        if (!$post) {
+            return response()->json(['error' => 'Post not found.'], 404);
+        }
+    
+        if ($post->user_id !== Auth::id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+    
+        $post->platforms()->detach();
+        $post->delete();
+    
+        return response()->json(['message' => 'Post deleted successfully.']);
+    }
+
+
 }
