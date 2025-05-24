@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Platform;
 use App\Models\Post;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -30,6 +31,20 @@ class PostController extends Controller
                     'error' => 'Content exceeds Twitter 280 character limit.'
                 ], 422);
             }
+        }
+
+        //Limit 10 shceduled posts per day
+        $scheduledDate = Carbon::parse($request->scheduled_time)->toDateString();
+
+        $existingScheduledCount = Post::where('user_id', Auth::id())
+            ->where('status', 'scheduled')
+            ->whereDate('scheduled_time', $scheduledDate)
+            ->count();
+        
+        if ($request->scheduled_time && $existingScheduledCount >= 10) {
+            return response()->json([
+                'error' => 'You have reached the limit of 10 scheduled posts for ' . $scheduledDate
+            ], 429);
         }
 
         $post = Post::create([
