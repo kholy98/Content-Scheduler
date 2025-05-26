@@ -1,29 +1,24 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-    baseURL: "http://localhost:8000/api",
-    withCredentials: true,
-    withXSRFToken: true,
+  baseURL: "http://localhost:8000/api",
 });
 
-
 axiosInstance.interceptors.request.use(
-    (config) => {
-      const token = localStorage.getItem("access_token");
-      const excludedRoutes = ["/login", "/register"];
+  (config) => {
+    const excludedRoutes = ["/login", "/register"];
 
-      if (!excludedRoutes.includes(config.url || "")) {
-        if (token) {
-          config.headers = config.headers || {};
-          config.headers["Authorization"] = `Bearer ${token}`;
-        }
+    if (!excludedRoutes.some(route => (config.url || "").includes(route))) {
+      const token = localStorage.getItem("access_token");
+      if (token) {
+        config.headers = config.headers || {};
+        config.headers["Authorization"] = `Bearer ${token}`;
       }
-  
-      return config;
-    },
-    (error) => {
-      return Promise.reject(error);
     }
-  );
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 export default axiosInstance;

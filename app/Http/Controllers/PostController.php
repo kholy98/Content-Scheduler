@@ -7,6 +7,7 @@ use App\Models\Post;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class PostController extends Controller
@@ -82,21 +83,21 @@ class PostController extends Controller
             ->where('user_id', $user->id);
 
         // Filter by status
-        if ($request->has('status')) {
+        if ($request->status != null) {
             $query->where('status', $request->status);
         }
 
         // Filter by date range
-        if ($request->filled('from')) {
+        if ($request->from != null) {
             $query->where('created_at', '>=', $request->from);
         }
     
-        if ($request->filled('to')) {
+        if ($request->to != null) {
             $query->where('created_at', '<=', $request->to);
         }
 
         // search by title/content
-        if ($request->has('search')) {
+        if ($request->search != null) {
             $query->where(function ($q) use ($request) {
                 $q->where('title', 'like', '%' . $request->search . '%')
                 ->orWhere('content', 'like', '%' . $request->search . '%');
