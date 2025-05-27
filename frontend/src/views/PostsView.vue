@@ -1,45 +1,50 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue';
-import axios from 'axios';
-import axiosInstance from "@/lib/axios";
+    import { ref, onMounted, watch } from 'vue';
+    import axiosInstance from "@/lib/axios";
+    import { Pencil } from 'lucide-vue-next';
+    import { useRouter } from 'vue-router';
+    import { usePostStore } from '@/stores/usePostStore';
 
-const posts = ref([]);
-const currentPage = ref(1);
-const totalPages = ref(1);
-const filters = ref({
-  status: '',
-  search: '',
-  from: '',
-  to: '',
-});
-
-const loading = ref(false);
-
-const fetchPosts = async () => {
-  loading.value = true;
-
-  try {
-    const { data } = await axiosInstance.get('/posts', {
-      params: {
-        ...filters.value,
-        page: currentPage.value,
-      },
+    const posts = ref([]);
+    const currentPage = ref(1);
+    const totalPages = ref(1);
+    const filters = ref({
+    status: '',
+    search: '',
+    from: '',
+    to: '',
     });
+    const loading = ref(false);
 
-    posts.value = data.data;
-    console.log(posts);
-    currentPage.value = data.current_page;
-    totalPages.value = data.last_page;
-  } catch (err) {
-    console.error('Error fetching posts', err);
-  } finally {
-    loading.value = false;
-  }
-};
+    const router = useRouter();
+    const postStore = usePostStore();
 
-// Fetch on mount and on filter/page change
-onMounted(fetchPosts);
-watch([filters, currentPage], fetchPosts, { deep: true });
+    const fetchPosts = async () => {
+    loading.value = true;
+    try {
+        const { data } = await axiosInstance.get('/posts', {
+        params: {
+            ...filters.value,
+            page: currentPage.value,
+        },
+        });
+        posts.value = data.data;
+        currentPage.value = data.current_page;
+        totalPages.value = data.last_page;
+    } catch (err) {
+        console.error('Error fetching posts', err);
+    } finally {
+        loading.value = false;
+    }
+    };
+
+    const handleEdit = (post) => {
+    postStore.setPost(post);
+    router.push({ name: 'editor' });
+    };
+
+    onMounted(fetchPosts);
+    watch([filters, currentPage], fetchPosts, { deep: true });
 </script>
 
 <template>
@@ -50,13 +55,12 @@ watch([filters, currentPage], fetchPosts, { deep: true });
       <!-- Filters -->
       <div class="grid md:grid-cols-4 sm:grid-cols-2 gap-4 mb-6">
         <input v-model="filters.search" type="text" placeholder="Search..." class="input" />
-        
         <select v-model="filters.status" class="input">
           <option value="">All Statuses</option>
           <option value="draft">Draft</option>
           <option value="published">Published</option>
+          <option value="scheduled">Scheduled</option>
         </select>
-
         <input v-model="filters.from" type="date" class="input" />
         <input v-model="filters.to" type="date" class="input" />
       </div>
@@ -76,19 +80,34 @@ watch([filters, currentPage], fetchPosts, { deep: true });
             <tr v-if="loading">
               <td colspan="4" class="p-4 text-center">Loading...</td>
             </tr>
-            <tr v-for="post in posts" :key="post.id" class="border-t border-slate-200 dark:border-slate-700">
+            <tr
+              v-for="post in posts"
+              :key="post.id"
+              class="border-t border-slate-200 dark:border-slate-700"
+            >
               <td class="p-3 font-medium">{{ post.title }}</td>
               <td class="p-3 capitalize">{{ post.status }}</td>
               <td class="p-3">{{ new Date(post.created_at).toLocaleDateString() }}</td>
               <td class="p-3">
-                <div class="flex flex-wrap gap-2">
-                  <span
-                    v-for="platform in post.platforms"
-                    :key="platform.id"
-                    class="bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-white text-xs px-2 py-1 rounded"
+                <div class="flex items-center gap-2 flex-wrap">
+                  <div class="flex flex-wrap gap-2">
+                    <span
+                      v-for="platform in post.platforms"
+                      :key="platform.id"
+                      class="bg-blue-100 dark:bg-blue-800 text-blue-700 dark:text-white text-xs px-2 py-1 rounded"
+                    >
+                      {{ platform.name }}
+                    </span>
+                  </div>
+                  <button
+                    v-if="post.status === 'scheduled'"
+                    @click="handleEdit(post)"
+                    class="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800"
+                    title="Edit Post"
                   >
-                    {{ platform.name }}
-                  </span>
+                    <Pencil class="w-4 h-4" />
+                    <span>Edit</span>
+                  </button>
                 </div>
               </td>
             </tr>

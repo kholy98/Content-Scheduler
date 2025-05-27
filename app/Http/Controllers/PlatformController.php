@@ -9,9 +9,7 @@ class PlatformController extends Controller
 {
     public function index(Request $request)
     {
-        $platforms = Platform::all();
-
-        return response()->json([$platforms]);
+        return response()->json(Platform::select('id', 'name', 'type')->get());
 
         // Optional: show which platforms are active for the user
         //$userActivePlatformIds = $request->user()->platforms()->pluck('platform_id')->toArray();

@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\PlatformController;
+use Illuminate\Support\Facades\Storage;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -27,4 +28,14 @@ Route::middleware('auth:sanctum')->group(function () {
     // Platforms
     Route::get('/platforms', [PlatformController::class, 'index']);
     Route::post('/platforms/toggle', [PlatformController::class, 'toggle']);
+
+    //upload image
+    Route::post('/upload', function (Request $request) {
+        $request->validate([
+            'image' => 'required|image|max:2048',
+        ]);
+    
+        $path = $request->file('image')->store('images', 'public');
+        return response()->json(['url' => Storage::url($path)]);
+    });
 });

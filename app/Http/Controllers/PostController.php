@@ -129,7 +129,7 @@ class PostController extends Controller
         $request->validate([
             'title' => 'sometimes|string|max:255',
             'content' => 'sometimes|string',
-            'image_url' => 'nullable|url',
+            'image_url' => 'nullable|string',
             'scheduled_time' => 'nullable|date|after:now',
             'platforms' => 'nullable|array',
             'platforms.*' => ['required', Rule::in(['twitter', 'instagram', 'linkedin'])],
