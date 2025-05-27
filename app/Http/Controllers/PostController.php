@@ -7,6 +7,7 @@ use App\Models\Post;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
@@ -171,6 +172,40 @@ class PostController extends Controller
     
         return response()->json(['message' => 'Post deleted successfully.']);
     }
+
+
+
+    public function dashboardData()
+    {
+        $user = Auth::user();
+    
+        // Fetch all posts with platforms for the user
+        $posts = Post::with('platforms')->where('user_id', $user->id)->latest()->get();
+    
+        $total = $posts->count();
+        $published = $posts->where('status', 'published')->count();
+        $scheduled = $posts->where('status', 'scheduled')->count();
+        $successRate = $total ? round(($published / $total) * 100, 1) : 0;
+    
+        // Get post count per platform type
+        $postsPerPlatform = DB::table('post_platform')
+            ->join('platforms', 'post_platform.platform_id', '=', 'platforms.id')
+            ->join('posts', 'post_platform.post_id', '=', 'posts.id')
+            ->where('posts.user_id', $user->id)
+            ->select('platforms.type', DB::raw('count(*) as count'))
+            ->groupBy('platforms.type')
+            ->get();
+    
+        return response()->json([
+            'posts' => $posts,
+            'total' => $total,
+            'published' => $published,
+            'scheduled' => $scheduled,
+            'success_rate' => $successRate,
+            'posts_per_platform' => $postsPerPlatform,
+        ]);
+    }
+    
 
 
 }

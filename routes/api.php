@@ -38,4 +38,7 @@ Route::middleware('auth:sanctum')->group(function () {
         $path = $request->file('image')->store('images', 'public');
         return response()->json(['url' => Storage::url($path)]);
     });
+
+   
+    Route::get('/dashboard-data',[PostController::class, 'dashboardData']);
 });
