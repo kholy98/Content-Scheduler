@@ -27,26 +27,35 @@ class PostController extends Controller
             ],
         ]);
 
-        foreach ($request->platforms as $platform) {
-            if ($platform === 'twitter' && strlen($request->content) > 280) {
+        // Validate content length based on platform settings
+        $selectedPlatforms = Platform::with('setting')
+            ->whereIn('type', $request->platforms)
+            ->get();
+
+        foreach ($selectedPlatforms as $platform) {
+            $limit = optional($platform->setting)->characters_limit;
+
+            if ($limit && strlen($request->content) > $limit) {
                 return response()->json([
-                    'error' => 'Content exceeds Twitter 280 character limit.'
+                    'error' => "Content exceeds {$platform->name} character limit of {$limit}."
                 ], 422);
             }
         }
 
-        //Limit 10 shceduled posts per day
-        $scheduledDate = Carbon::parse($request->scheduled_time)->toDateString();
+        // Limit 10 scheduled posts per day
+        if ($request->scheduled_time) {
+            $scheduledDate = Carbon::parse($request->scheduled_time)->toDateString();
 
-        $existingScheduledCount = Post::where('user_id', Auth::id())
-            ->where('status', 'scheduled')
-            ->whereDate('scheduled_time', $scheduledDate)
-            ->count();
-        
-        if ($request->scheduled_time && $existingScheduledCount >= 10) {
-            return response()->json([
-                'error' => 'You have reached the limit of 10 scheduled posts for ' . $scheduledDate
-            ], 429);
+            $existingScheduledCount = Post::where('user_id', Auth::id())
+                ->where('status', 'scheduled')
+                ->whereDate('scheduled_time', $scheduledDate)
+                ->count();
+
+            if ($existingScheduledCount >= 10) {
+                return response()->json([
+                    'error' => 'You have reached the limit of 10 scheduled posts for ' . $scheduledDate
+                ], 429);
+            }
         }
 
         $post = Post::create([
@@ -58,7 +67,7 @@ class PostController extends Controller
             'user_id' => Auth::id(),
         ]);
 
-        $platformIds = Platform::whereIn('type', $request->platforms)->pluck('id');
+        $platformIds = $selectedPlatforms->pluck('id');
 
         $pivotData = [];
         $status = $request->scheduled_time ? 'pending' : 'posted';
@@ -69,12 +78,12 @@ class PostController extends Controller
 
         $post->platforms()->attach($pivotData);
 
-
         return response()->json([
             'message' => 'Post created successfully.',
             'post' => $post->load('platforms'),
         ], 201);
     }
+
 
     public function index(Request $request)
     {

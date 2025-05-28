@@ -5,6 +5,7 @@
         <RouterLink to="/dashboard" class="block">Dashboard</RouterLink>
         <RouterLink to="/posts" class="block">Posts</RouterLink>
         <RouterLink to="/editor" class="block">New Post</RouterLink>
+        <RouterLink to="/platforms" class="block">Platforms</RouterLink>
         <RouterLink to="/settings" class="block">Settings</RouterLink>
         <button @click="logout" class="text-red-600 mt-4">Logout</button>
       </nav>

@@ -28,6 +28,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Platforms
     Route::get('/platforms', [PlatformController::class, 'index']);
     Route::post('/platforms/toggle', [PlatformController::class, 'toggle']);
+    Route::put('/platforms/{platform}', [PlatformController::class, 'update']);
 
     //upload image
     Route::post('/upload', function (Request $request) {

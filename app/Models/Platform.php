@@ -8,14 +8,17 @@ class Platform extends Model
 {
     protected $fillable = [
         'name',
-        'description',
-        'url',
-        'icon',
+        'type',
     ];
 
     public function posts() {
         return $this->belongsToMany(Post::class, 'post_platform')
             ->withPivot('platform_status')
             ->withTimestamps();
+    }
+
+    public function setting()
+    {
+        return $this->hasOne(PlatformSetting::class);
     }
 }

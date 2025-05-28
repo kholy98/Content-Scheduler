@@ -4,26 +4,39 @@ namespace App\Http\Controllers;
 
 use App\Models\Platform;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class PlatformController extends Controller
 {
     public function index(Request $request)
     {
-        return response()->json(Platform::select('id', 'name', 'type')->get());
+        $platforms = Platform::with('setting')->select('id', 'name', 'type')->get();
 
-        // Optional: show which platforms are active for the user
-        //$userActivePlatformIds = $request->user()->platforms()->pluck('platform_id')->toArray();
+        return $platforms;
+    }
 
-        // return response()->json([
-        //     'platforms' => $platforms->map(function ($platform) use ($userActivePlatformIds) {
-        //         return [
-        //             'id' => $platform->id,
-        //             'name' => $platform->name,
-        //             'type' => $platform->type,
-        //             'active' => in_array($platform->id, $userActivePlatformIds),
-        //         ];
-        //     })
-        // ]);
+
+
+
+    public function update(Request $request, Platform $platform)
+    {
+        // Ensure the user is an admin
+        if (!Auth::user() || !Auth::user()->is_admin) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        
+        $validated = $request->validate([
+            'characters_limit' => 'required|integer|min:0',
+        ]);
+
+        
+        $platform->setting()->updateOrCreate(
+            ['platform_id' => $platform->id],
+            ['characters_limit' => $validated['characters_limit']]
+        );
+
+        return response()->json(['message' => 'Platform settings updated successfully.']);
     }
 
 }
