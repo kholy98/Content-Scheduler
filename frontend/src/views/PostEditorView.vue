@@ -1,11 +1,11 @@
-<script setup>
+<!-- <script setup>
     import { ref, onMounted, onUnmounted } from 'vue';
-    import { useRouter } from 'vue-router'; // ⬅️ Import this
+    import { useRouter } from 'vue-router'; 
     import { usePostStore } from '@/stores/usePostStore';
     import axiosInstance from '@/lib/axios';
     import { Upload, CalendarDays } from 'lucide-vue-next';
 
-    const router = useRouter(); // ⬅️ Init router
+    const router = useRouter();
 
     const postStore = usePostStore();
     const post = ref({
@@ -93,6 +93,109 @@
             loading.value = false;
         }
     }
+</script> -->
+
+<script setup>
+import { ref, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { usePostStore } from '@/stores/usePostStore';
+import axiosInstance from '@/lib/axios';
+import { Upload, CalendarDays } from 'lucide-vue-next';
+
+const router = useRouter();
+const postStore = usePostStore();
+
+const post = ref({
+  id: null,
+  title: '',
+  content: '',
+  status: 'draft',
+  scheduled_time: '',
+  platforms: [],
+  image_url: '',
+});
+
+const availablePlatforms = ref([]);
+const contentLength = ref(0);
+const selectedImage = ref(null);
+const loading = ref(false);
+const characterLimit = 280;
+
+function getImageUrl(path) {
+  if (path.startsWith('http') || path.startsWith('data:')) return path;
+  return `http://localhost:8000${path.startsWith('/') ? path : '/' + path}`;
+}
+
+onMounted(async () => {
+  if (postStore.currentPost) {
+    post.value = {
+      ...postStore.currentPost,
+      platforms: postStore.currentPost.platforms.map(p => p.type),
+    };
+    contentLength.value = post.value.content?.length || 0;
+  }
+
+  try {
+    const { data } = await axiosInstance.get('/platforms');
+    availablePlatforms.value = data;
+  } catch (e) {
+    console.error('Failed to load platforms:', e);
+  }
+});
+
+onUnmounted(() => {
+  postStore.clearPost();
+});
+
+async function handleImageUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append('image', file);
+
+  try {
+    const { data } = await axiosInstance.post('/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    post.value.image_url = data.url;
+    selectedImage.value = file;
+  } catch (err) {
+    console.error('Image upload failed', err);
+    alert('Image upload failed');
+  }
+}
+
+async function handleSubmit() {
+  loading.value = true;
+  try {
+    const payload = {
+      title: post.value.title,
+      content: post.value.content,
+      scheduled_time: post.value.scheduled_time,
+      status: post.value.status,
+      image_url: post.value.image_url,
+      platforms: post.value.platforms,
+    };
+
+    let response;
+    if (post.value.id) {
+      response = await axiosInstance.put(`/posts/${post.value.id}`, payload);
+    } else {
+      response = await axiosInstance.post('/posts', payload);
+    }
+
+    alert(post.value.id ? 'Post updated successfully!' : 'Post created successfully!');
+    router.push('/posts');
+  } catch (err) {
+    console.error('Save failed', err);
+    const errors = err.response?.data?.errors || {};
+    const message = Object.values(errors).flat().join('\n') || err.response?.data?.error || 'Failed to save post';
+    alert(message);
+  } finally {
+    loading.value = false;
+  }
+}
 </script>
 
 

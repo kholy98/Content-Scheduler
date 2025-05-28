@@ -3,6 +3,7 @@
     <aside class="w-64 bg-white shadow-md p-4">
       <nav class="space-y-2">
         <RouterLink to="/dashboard" class="block">Dashboard</RouterLink>
+        <RouterLink to="/users" class="block">Users</RouterLink>
         <RouterLink to="/posts" class="block">Posts</RouterLink>
         <RouterLink to="/editor" class="block">New Post</RouterLink>
         <RouterLink to="/platforms" class="block">Platforms</RouterLink>
