@@ -21,4 +21,12 @@ class Platform extends Model
     {
         return $this->hasOne(PlatformSetting::class);
     }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class)
+            ->withPivot('is_active')
+            ->withTimestamps();
+    }
+
 }

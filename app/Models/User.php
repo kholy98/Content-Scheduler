@@ -56,4 +56,11 @@ class User extends Authenticatable
     {
         return $this->is_admin;
     }
+
+    public function platforms()
+    {
+        return $this->belongsToMany(Platform::class)
+            ->withPivot('is_active')
+            ->withTimestamps();
+    }
 }

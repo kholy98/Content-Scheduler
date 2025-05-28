@@ -59,6 +59,12 @@ const routes = [
         component: () => import('@/views/PlatformsView.vue'),
         meta: { requiresAuth: true }
       },
+      {
+        path: '/users',
+        name: 'users',
+        component: () => import('@/views/UserManagement.vue'),
+        meta: { requiresAuth: true }
+      },
     ],
   },
 ];

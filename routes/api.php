@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -17,6 +18,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     //Route::get('/user', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/users', [UserController::class, 'index']);
 
 
     // Posts
@@ -28,7 +30,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Platforms
     Route::get('/platforms', [PlatformController::class, 'index']);
     Route::post('/platforms/toggle', [PlatformController::class, 'toggle']);
+    Route::get('/users/{user}/platforms', [UserController::class, 'getUserPlatforms']);
     Route::put('/platforms/{platform}', [PlatformController::class, 'update']);
+    Route::post('/users/{user}/platforms/{platform}/set-status', [PlatformController::class, 'setPlatformStatus']);
 
     //upload image
     Route::post('/upload', function (Request $request) {
@@ -42,4 +46,5 @@ Route::middleware('auth:sanctum')->group(function () {
 
    
     Route::get('/dashboard-data',[PostController::class, 'dashboardData']);
+
 });
