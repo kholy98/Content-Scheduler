@@ -24,5 +24,12 @@ class UserSeeder extends Seeder
             ->count(5)
             ->state(['is_admin' => false])
             ->create();
+
+        User::create([
+            'name' => 'Test Admin',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password'),
+            'is_admin' => true,
+        ]);
     }
 }

@@ -1,4 +1,6 @@
+# Content Scheduler
 
+A modern Laravel + Vue.js application skeleton for building robust content scheduling and management solutions.
 
 ## Installation
 
@@ -71,3 +73,46 @@ npm run dev
 php artisan serve
 ```
 
+## Features & Approaches
+
+### Authentication
+
+- **API Authentication with Laravel Sanctum:**  
+  Users authenticate via API endpoints using Laravel Sanctum. After login or registration, a token is issued and stored on the frontend. All protected API requests require this token.
+
+- **Frontend Auth Flow:**  
+  The Vue.js frontend handles login, registration, and logout. User authentication state is managed with Pinia, and navigation guards restrict access to protected routes.
+
+### User & Role Management
+
+- **Admin & Regular Users:**  
+  Users have an `is_admin` flag. Admins can manage platforms, users, and settings.
+- **User-Platform Relationship:**  
+  Users can be assigned to platforms with an active/inactive status.
+
+### Platform Management
+
+- **Platforms & Settings:**  
+  Platforms are managed in the backend. Each platform can have custom settings (like character limits), which admins can update.
+
+### Post Management
+
+- **CRUD Operations:**  
+  Users can create, read, update, and delete posts associated with platforms.
+
+### File Uploads
+
+- **Image Upload:**  
+  Authenticated users can upload images, which are validated and stored securely.
+
+### Dashboard
+
+- **User Dashboard:**  
+  Authenticated users have access to a dashboard showing their info and activities.
+
+### Frontend
+
+- **Vue 3 + Vite:**  
+  The frontend is a SPA built with Vue 3 and Vite, using Pinia for state management and Vue Router for navigation.
+- **Tailwind CSS:**  
+  Used for fast and responsive UI styling.
